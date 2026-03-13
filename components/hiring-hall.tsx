@@ -233,7 +233,7 @@ export function HiringHall() {
               type="text"
               name="command"
               className="flex-1 min-w-0 bg-transparent border-none outline-none text-foreground placeholder:text-muted-foreground"
-              placeholder="help, list, search..."
+              placeholder="help, list, search, about..."
               autoFocus
             />
             <span className="w-2 h-4 sm:h-5 bg-primary cursor-blink shrink-0" />
