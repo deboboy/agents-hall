@@ -10,7 +10,11 @@ import {
 } from "@/components/ui/sheet"
 import { SidebarContent } from "./sidebar-content"
 
-export function TerminalHeader() {
+interface TerminalHeaderProps {
+  onFeedback?: () => void
+}
+
+export function TerminalHeader({ onFeedback }: TerminalHeaderProps) {
   const [time, setTime] = useState("")
 
   useEffect(() => {
@@ -36,7 +40,7 @@ export function TerminalHeader() {
             <SheetTitle className="text-primary text-glow-subtle font-bold text-sm mb-4">
               AGENTS HALL
             </SheetTitle>
-            <SidebarContent />
+            <SidebarContent onFeedback={onFeedback} />
           </SheetContent>
         </Sheet>
 

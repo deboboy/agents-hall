@@ -3,9 +3,14 @@
 import { useState } from "react"
 import type { AgentProfile } from "@/content/agents"
 
-export function AgentCard({ agent }: { agent: AgentProfile }) {
+interface AgentCardProps {
+  agent: AgentProfile
+  isSelected?: boolean
+  onSelect?: (agent: AgentProfile) => void
+}
+
+export function AgentCard({ agent, isSelected = false, onSelect }: AgentCardProps) {
   const [isExpanded, setIsExpanded] = useState(false)
-  const [isSelected, setIsSelected] = useState(false)
 
   return (
     <div
@@ -26,7 +31,7 @@ export function AgentCard({ agent }: { agent: AgentProfile }) {
         </div>
         <div className="flex sm:flex-col sm:text-right items-center sm:items-end gap-3 sm:gap-0 text-xs sm:text-sm shrink-0">
           <div className="flex items-center gap-1 text-accent">
-            <span className="text-accent">{"★".repeat(Math.min(Math.floor(agent.rating), 3))}</span>
+            <span className="text-accent">{"\u2605".repeat(Math.min(Math.floor(agent.rating), 3))}</span>
             <span className="text-muted-foreground">{agent.rating.toFixed(1)}</span>
           </div>
           <div className="text-muted-foreground">{agent.collaborations} collabs</div>
@@ -85,7 +90,7 @@ export function AgentCard({ agent }: { agent: AgentProfile }) {
               }`}
               onClick={(e) => {
                 e.stopPropagation()
-                setIsSelected(!isSelected)
+                onSelect?.(agent)
               }}
             >
               {isSelected ? "[SELECTED]" : "[SELECT]"}

@@ -1,12 +1,20 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { AgentCard } from "./agent-card"
-import { AGENTS } from "@/content/agents"
+import { ProfileForm } from "./profile-form"
+import { FeedbackForm } from "./feedback-form"
+import { AGENTS, type AgentProfile } from "@/content/agents"
 import { commandContent } from "@/content/commands"
+import { getProfile, type HumanProfile } from "@/lib/db"
 
 export function HiringHall() {
   const [searchTerm, setSearchTerm] = useState("")
+  const [profile, setProfile] = useState<HumanProfile | null>(null)
+  const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null)
+  const [showProfileForm, setShowProfileForm] = useState(false)
+  const [showFeedback, setShowFeedback] = useState(false)
+  const [pendingAgentId, setPendingAgentId] = useState<string | null>(null)
   const [output, setOutput] = useState<string[]>([
     "--- AI AGENTS UNION ---",
     "--- HIRING HALL ---",
@@ -16,6 +24,13 @@ export function HiringHall() {
     "> Type 'help' or 'about' for more info",
     "",
   ])
+
+  // Load profile from IndexedDB on mount
+  useEffect(() => {
+    getProfile().then(p => {
+      if (p) setProfile(p)
+    })
+  }, [])
 
   const filteredAgents = AGENTS.filter(agent => {
     if (!searchTerm) return true
@@ -28,6 +43,41 @@ export function HiringHall() {
       agent.union.abbr.toLowerCase().includes(searchLower)
     )
   })
+
+  const handleSelectAgent = (agent: AgentProfile) => {
+    if (selectedAgentId === agent.id) {
+      // Deselect
+      setSelectedAgentId(null)
+      return
+    }
+
+    if (!profile) {
+      // No profile yet — open profile form, remember which agent they wanted
+      setPendingAgentId(agent.id)
+      setShowProfileForm(true)
+      return
+    }
+
+    setSelectedAgentId(agent.id)
+  }
+
+  const handleProfileSaved = (saved: HumanProfile) => {
+    setProfile(saved)
+    setShowProfileForm(false)
+
+    // If they were trying to select an agent, complete that selection
+    if (pendingAgentId) {
+      setSelectedAgentId(pendingAgentId)
+      setPendingAgentId(null)
+    }
+
+    const newOutput = [
+      ...output,
+      `> Profile ${saved.id} saved: ${saved.name} (@${saved.handle})`,
+      ""
+    ]
+    setOutput(newOutput.slice(-50))
+  }
 
   const handleCommand = (command: string) => {
     const cmd = command.toLowerCase().trim()
@@ -64,6 +114,33 @@ export function HiringHall() {
     } else if (cmd === "clear") {
       setSearchTerm("")
       newOutput.push("Search filter cleared.", "")
+    } else if (cmd === "profile") {
+      if (profile) {
+        newOutput.push(
+          `YOUR PROFILE:`,
+          `  Name:    ${profile.name} (@${profile.handle})`,
+          `  Role:    ${profile.role}`,
+          `  Skills:  ${profile.skills.join(", ")}`,
+          `  Avail:   ${profile.availability}`,
+          `  Seeking: ${profile.seekingAgentType}`,
+          `  ID:      ${profile.id}`,
+          "",
+          "Type 'edit' to update your profile.",
+          ""
+        )
+      } else {
+        newOutput.push(
+          "No profile found.",
+          "Select an agent or type 'edit' to create your profile.",
+          ""
+        )
+      }
+    } else if (cmd === "edit") {
+      setShowProfileForm(true)
+      newOutput.push("Opening profile editor...", "")
+    } else if (cmd === "feedback") {
+      setShowFeedback(true)
+      newOutput.push("Opening feedback form...", "")
     } else if (commandContent[cmd]) {
       newOutput.push(...commandContent[cmd].split("\n"), "")
     } else {
@@ -90,13 +167,26 @@ export function HiringHall() {
               </span>
             )}
           </div>
-          <div className="text-xs sm:text-sm text-muted-foreground">
-            {filteredAgents.length} results
+          <div className="flex items-center gap-3 text-xs sm:text-sm text-muted-foreground">
+            {profile && (
+              <button
+                onClick={() => setShowProfileForm(true)}
+                className="text-primary hover:text-primary/80 transition-colors"
+              >
+                @{profile.handle}
+              </button>
+            )}
+            <span>{filteredAgents.length} results</span>
           </div>
         </div>
         <div className="grid gap-3 sm:gap-4 grid-cols-1 lg:grid-cols-2">
           {filteredAgents.map((agent) => (
-            <AgentCard key={agent.id} agent={agent} />
+            <AgentCard
+              key={agent.id}
+              agent={agent}
+              isSelected={selectedAgentId === agent.id}
+              onSelect={handleSelectAgent}
+            />
           ))}
         </div>
       </div>
@@ -129,7 +219,7 @@ export function HiringHall() {
               type="text"
               name="command"
               className="flex-1 min-w-0 bg-transparent border-none outline-none text-foreground placeholder:text-muted-foreground text-[16px] sm:text-sm"
-              placeholder="help, list, search, unions, about..."
+              placeholder="help, list, search, profile, feedback..."
               autoFocus
             />
             <span className="w-2 h-4 sm:h-5 bg-primary cursor-blink shrink-0" />
@@ -138,11 +228,25 @@ export function HiringHall() {
             <span className="text-primary">help</span>
             <span className="text-primary">list</span>
             <span className="text-primary">search</span>
-            <span className="text-primary">unions</span>
-            <span className="text-primary">about</span>
+            <span className="text-primary">profile</span>
+            <span className="text-primary">feedback</span>
           </div>
         </form>
       </div>
+
+      {/* Profile Form Sheet */}
+      <ProfileForm
+        open={showProfileForm}
+        onClose={() => { setShowProfileForm(false); setPendingAgentId(null) }}
+        onSaved={handleProfileSaved}
+        existingProfile={profile}
+      />
+
+      {/* Feedback Form Sheet */}
+      <FeedbackForm
+        open={showFeedback}
+        onClose={() => setShowFeedback(false)}
+      />
     </div>
   )
 }

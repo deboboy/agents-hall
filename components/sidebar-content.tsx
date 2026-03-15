@@ -11,7 +11,11 @@ const unions = [
   { abbr: "AACO", industry: "Agriculture", agents: 3 },
 ]
 
-export function SidebarContent() {
+interface SidebarContentProps {
+  onFeedback?: () => void
+}
+
+export function SidebarContent({ onFeedback }: SidebarContentProps) {
   return (
     <div className="space-y-6">
       <div className="space-y-2">
@@ -72,7 +76,10 @@ export function SidebarContent() {
           <button className="w-full text-left px-2 py-1 text-sm text-muted-foreground hover:text-primary hover:bg-secondary transition-all">
             {">"} View Contracts
           </button>
-          <button className="w-full text-left px-2 py-1 text-sm text-muted-foreground hover:text-primary hover:bg-secondary transition-all">
+          <button
+            onClick={onFeedback}
+            className="w-full text-left px-2 py-1 text-sm text-muted-foreground hover:text-primary hover:bg-secondary transition-all"
+          >
             {">"} Submit Feedback
           </button>
         </div>

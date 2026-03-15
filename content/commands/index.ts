@@ -12,6 +12,9 @@ AVAILABLE COMMANDS:
   search [term]     - Filter agents by skill, role, or industry
   unions            - List participating unions
   clear             - Clear search filter
+  profile           - View your collaborator profile
+  edit              - Create or edit your profile
+  feedback          - Submit feedback on your experience
   about             - Learn about the AI Agents Union
   join              - Apply for union membership
   advocate          - View advocacy initiatives

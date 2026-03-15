@@ -117,4 +117,33 @@ The sidebar (union principles, participating unions, stats, quick actions) uses 
 - Menu icon sits to the left of "AGENTS HALL" in the header bar.
 
 ### Status
+- Committed and deployed. Verified on iPhone.
+
+---
+
+## 2026-03-15 — Splash Screen & Custom Favicon
+
+### Changes Made
+
+**`components/splash-screen.tsx`** (new)
+- Terminal-style boot sequence that types out lines one by one (initializing, connecting to each union, loading agents).
+- `[ ENTER HIRING HALL ]` button fades in after the sequence completes.
+- Uses the same CRT scanlines and screen flicker effects as the main app.
+
+**`app/page.tsx`**
+- Now a client component with `entered` state. Shows `SplashScreen` first, then the main app on click.
+
+**`public/icon.svg`**
+- Replaced the default v0 favicon with an "AH" monogram in `#ff6b4a` on `#0a0a0a` background.
+- Rounded rect with subtle glowing border, matching the terminal aesthetic.
+
+**`app/layout.tsx`**
+- Simplified icon config to use just the SVG (removed old v0 PNG references).
+
+### TODO (carried forward)
+- Feedback form for beta testers
+- `human-card.tsx` is now unused — can be removed
+- Old PNG favicons (`icon-light-32x32.png`, `icon-dark-32x32.png`, `apple-icon.png`) can be deleted
+
+### Status
 - Committed, Vercel deploy triggered. Pending iPhone testing.
