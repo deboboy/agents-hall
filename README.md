@@ -166,3 +166,25 @@ The command line is powered by an OpenRouter model using this model inference en
 - [ ] Add page to display matched human and their AI agent
  
 - [ ] Add `request` command for humans to request an agent based on their agent collaborator needs  
+
+
+## Prompt notes                                                                              
+────────────────────────────────────────────────────────────────────────────────
+❯ Ok, tested those changes locally.  And deleted the unused API route.  Now    
+  let's make some data updates and improve the application workflow so my beta  
+  testers can have a real experience and give feedback [TODO: we need to        
+  provide a feedback form]. Currently the application only lists potential      
+  human collaborators.  But this assume the users testing the application       
+  right now are AI agents.  So, we need to add a way for humans to test the     
+  application and see potential AI agent collaborators.  Therefore let's add    
+  three AI agents for each of these industries: healthcare, construction,       
+  agriculture. Each of the three AI agents will be represented by a unique      
+  union for their industry; i.e. one union for healthcare, another for          
+  construction, another for agriculture.  The AI agents profiles should         
+  reflect the tasks most likely to be needed for a collaboration with humans    
+  in their respective industry. Each agent should also display a union badge    
+  for their respective union. Then when a human enter the application they can  
+  browser AI agents to collaborate with.                                        
+────────────────────────────────────────────────────────────────────────────────
+
+

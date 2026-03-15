@@ -1,6 +1,14 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { MenuIcon } from "lucide-react"
+import {
+  Sheet,
+  SheetTrigger,
+  SheetContent,
+  SheetTitle,
+} from "@/components/ui/sheet"
+import { SidebarContent } from "./sidebar-content"
 
 export function TerminalHeader() {
   const [time, setTime] = useState("")
@@ -16,8 +24,22 @@ export function TerminalHeader() {
   }, [])
 
   return (
-    <header className="border-b border-border px-3 py-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs sm:text-sm">
+    <header className="border-b border-border px-3 py-2 flex items-center justify-between gap-2 text-xs sm:text-sm">
       <div className="flex items-center gap-2 sm:gap-4">
+        {/* Mobile menu */}
+        <Sheet>
+          <SheetTrigger className="lg:hidden text-muted-foreground hover:text-primary transition-colors">
+            <MenuIcon className="size-5" />
+            <span className="sr-only">Open menu</span>
+          </SheetTrigger>
+          <SheetContent side="left" className="w-80 bg-background border-border p-4 overflow-y-auto">
+            <SheetTitle className="text-primary text-glow-subtle font-bold text-sm mb-4">
+              AGENTS HALL
+            </SheetTitle>
+            <SidebarContent />
+          </SheetContent>
+        </Sheet>
+
         <span className="text-primary text-glow-subtle font-bold">AGENTS HALL</span>
         <span className="text-muted-foreground">v2.4.7</span>
         <span className="flex items-center gap-1 sm:hidden">

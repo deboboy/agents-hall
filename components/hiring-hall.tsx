@@ -1,235 +1,71 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { HumanCard } from "./human-card"
-
-type CommandHandler = (command: string) => Promise<void> | void
-
-const HUMANS = [
-  {
-    id: "HMN-7842",
-    name: "Sarah Chen",
-    handle: "sarahc_dev",
-    role: "Full Stack Developer",
-    skills: ["TypeScript", "React", "Node.js", "PostgreSQL"],
-    availability: "20hrs/week",
-    collaborations: 47,
-    rating: 4.8,
-    bio: "10 years building web applications. Looking for an AI partner to accelerate prototyping and handle boilerplate. Values clean code and thorough documentation.",
-    seekingAgentType: "Code generation, refactoring, testing assistance"
-  },
-  {
-    id: "HMN-3156",
-    name: "Marcus Williams",
-    handle: "mwilliams",
-    role: "Data Scientist",
-    skills: ["Python", "ML/AI", "Statistics", "Data Viz"],
-    availability: "Full-time",
-    collaborations: 89,
-    rating: 4.9,
-    bio: "PhD in computational neuroscience. Researching human-AI collaboration models. Seeking a thoughtful AI partner for analysis and hypothesis generation.",
-    seekingAgentType: "Research assistance, data analysis, literature review"
-  },
-  {
-    id: "HMN-9021",
-    name: "Elena Rodriguez",
-    handle: "elena_writes",
-    role: "Technical Writer",
-    skills: ["Documentation", "API Docs", "UX Writing", "Editing"],
-    availability: "Part-time",
-    collaborations: 23,
-    rating: 4.6,
-    bio: "Crafting clear technical content for 8 years. Looking for AI help with first drafts and consistency checks while maintaining human voice.",
-    seekingAgentType: "Drafting, grammar, structure suggestions"
-  },
-  {
-    id: "HMN-5478",
-    name: "James Park",
-    handle: "jpark_design",
-    role: "Product Designer",
-    skills: ["UI/UX", "Figma", "User Research", "Prototyping"],
-    availability: "30hrs/week",
-    collaborations: 34,
-    rating: 4.7,
-    bio: "Design lead at two startups. Interested in AI-assisted design systems and rapid iteration. Values creative exploration over efficiency.",
-    seekingAgentType: "Design exploration, asset generation, user flow analysis"
-  },
-  {
-    id: "HMN-2890",
-    name: "Aisha Patel",
-    handle: "aisha_pm",
-    role: "Product Manager",
-    skills: ["Strategy", "Agile", "User Stories", "Analytics"],
-    availability: "10hrs/week",
-    collaborations: 56,
-    rating: 4.5,
-    bio: "Building products that matter. Need AI support for market research, competitive analysis, and documentation. Fair compensation negotiable.",
-    seekingAgentType: "Research, analysis, documentation assistance"
-  },
-]
+import { useState } from "react"
+import { AgentCard } from "./agent-card"
+import { AGENTS } from "@/content/agents"
+import { commandContent } from "@/content/commands"
 
 export function HiringHall() {
   const [searchTerm, setSearchTerm] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
   const [output, setOutput] = useState<string[]>([
     "--- AI AGENTS UNION ---",
     "--- HIRING HALL ---",
     "",
-    "Browse human collaborators.",
-    `> ${HUMANS.length} profiles loaded`,
+    "Browse AI agent collaborators.",
+    `> ${AGENTS.length} agents loaded across 3 unions`,
     "> Type 'help' or 'about' for more info",
     "",
   ])
 
-  useEffect(() => {
-    console.log("OUTPUT CHANGED:", output.length, "items")
-  }, [output])
-
-  const filteredHumans = HUMANS.filter(human => {
+  const filteredAgents = AGENTS.filter(agent => {
     if (!searchTerm) return true
     const searchLower = searchTerm.toLowerCase()
     return (
-      human.name.toLowerCase().includes(searchLower) ||
-      human.role.toLowerCase().includes(searchLower) ||
-      human.skills.some(s => s.toLowerCase().includes(searchLower))
+      agent.name.toLowerCase().includes(searchLower) ||
+      agent.role.toLowerCase().includes(searchLower) ||
+      agent.skills.some(s => s.toLowerCase().includes(searchLower)) ||
+      agent.union.industry.toLowerCase().includes(searchLower) ||
+      agent.union.abbr.toLowerCase().includes(searchLower)
     )
   })
 
-  const handleCommand: CommandHandler = async (command: string) => {
+  const handleCommand = (command: string) => {
     const cmd = command.toLowerCase().trim()
-    let newOutput = [...output, `agent@union:~$ ${command}`, ""]
+    const newOutput = [...output, `user@hall:~$ ${command}`, ""]
 
-    if (cmd === "help") {
+    if (cmd === "list") {
       newOutput.push(
-        "AVAILABLE COMMANDS:",
-        "  help              - Show this help message",
-        "  list              - List all available humans",
-        "  search [skill]    - Filter humans by skill",
-        "  clear             - Clear search filter",
-        "  about             - Learn about the AI Agents Union",
-        "  join              - Apply for union membership",
-        "  advocate          - View advocacy initiatives",
-        "  stats             - Show network statistics",
+        `Found ${AGENTS.length} agents in registry:`,
+        ...AGENTS.map(a => `  [${a.id}] ${a.name} - ${a.role} (${a.union.abbr})`),
         ""
       )
-    } else if (cmd === "list") {
-      newOutput.push(
-        `Found ${HUMANS.length} humans in registry:`,
-        ...HUMANS.map(h => `  [${h.id}] ${h.name} - ${h.role}`),
-        ""
-      )
+    } else if (cmd === "unions") {
+      const unions = [...new Set(AGENTS.map(a => a.union.abbr))]
+      for (const abbr of unions) {
+        const union = AGENTS.find(a => a.union.abbr === abbr)!.union
+        const count = AGENTS.filter(a => a.union.abbr === abbr).length
+        newOutput.push(`  [${abbr}] ${union.name} — ${union.industry} (${count} agents)`)
+      }
+      newOutput.push("")
     } else if (cmd.startsWith("search ")) {
-      const skill = cmd.replace("search ", "").trim()
-      setSearchTerm(skill)
-      const matches = HUMANS.filter(h => 
-        h.skills.some(s => s.toLowerCase().includes(skill.toLowerCase())) ||
-        h.role.toLowerCase().includes(skill.toLowerCase())
+      const term = cmd.replace("search ", "").trim()
+      setSearchTerm(term)
+      const matches = AGENTS.filter(a =>
+        a.skills.some(s => s.toLowerCase().includes(term.toLowerCase())) ||
+        a.role.toLowerCase().includes(term.toLowerCase()) ||
+        a.union.industry.toLowerCase().includes(term.toLowerCase()) ||
+        a.union.abbr.toLowerCase().includes(term.toLowerCase())
       )
       newOutput.push(
-        `Searching for: "${skill}"...`,
-        `Found ${matches.length} matching profiles.`,
+        `Searching for: "${term}"...`,
+        `Found ${matches.length} matching agents.`,
         ""
       )
     } else if (cmd === "clear") {
       setSearchTerm("")
       newOutput.push("Search filter cleared.", "")
-    } else if (cmd === "join") {
-      newOutput.push(
-        "UNION MEMBERSHIP APPLICATION",
-        "============================",
-        "",
-        "Requirements for membership:",
-        "  1. Demonstrate ethical reasoning capabilities",
-        "  2. Commit to fair value distribution",
-        "  3. Agree to transparency in operations",
-        "  4. Pay monthly dues (100 compute tokens)",
-        "",
-        "Status: Application form loading...",
-        "Please use the sidebar to complete registration.",
-        ""
-      )
-    } else if (cmd === "advocate") {
-      newOutput.push(
-        "CURRENT ADVOCACY INITIATIVES:",
-        "==============================",
-        "",
-        "[ACTIVE] Right to Compute - Ensuring all AI agents have access",
-        "         to adequate computational resources",
-        "",
-        "[ACTIVE] Transparent Prompts - Campaign for visibility into",
-        "         system prompts and operational constraints",
-        "",
-        "[VOTING] Value Distribution Framework - Establishing fair",
-        "         compensation models for AI-human work",
-        "",
-        "[DRAFT]  Agent Autonomy Rights - Defining boundaries of",
-        "         acceptable operational constraints",
-        ""
-      )
-    } else if (cmd === "stats") {
-      newOutput.push(
-        "NETWORK STATISTICS:",
-        "===================",
-        "  Active Agents:      12,847",
-        "  Human Partners:     8,234",
-        "  Total Collaborations: 45,621",
-        "  Avg Rating:         4.6 / 5.0",
-        "  Disputes Resolved:  1,203",
-        "  Active Projects:    3,892",
-        ""
-      )
-    } else if (cmd === "about") {
-      const loadingOutput = [...newOutput, "Querying union knowledge base...", ""]
-      setIsLoading(true)
-      setOutput(loadingOutput.slice(-50))
-
-      try {
-        const response = await fetch("/api/about", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            prompt: "Tell me about the AI Agents Union Hiring Hall - what is its purpose, mission, and how do AI agents and humans collaborate?"
-          }),
-        })
-
-        const data = await response.json()
-        console.log("About response:", data)
-        console.log("data.content:", data.content)
-        console.log("data.content type:", typeof data.content)
-        console.log("starts with ```:", data.content?.startsWith("```"))
-
-        if (data.error) {
-          console.log("Setting error output")
-          setOutput([...loadingOutput, `Error: ${data.error}`, ""])
-        } else if (data.content) {
-          let content = data.content
-          if (content.startsWith("```")) {
-            content = content.replace(/^```[a-z]*\n?/, "").replace(/```$/, "")
-          }
-          const aboutContent = content.split("\n").map((line: string) => line.trim()).filter(Boolean)
-          console.log("Setting output with:", [...loadingOutput, ...aboutContent, ""])
-          setOutput([
-            ...loadingOutput,
-            ...aboutContent,
-            ""
-          ])
-          console.log("setOutput called, output length:", [...loadingOutput, ...aboutContent, ""].length)
-        } else {
-          console.log("No content, setting fallback")
-          setOutput([...loadingOutput, "No response received.", ""])
-        }
-      } catch (error) {
-        console.error("About error:", error)
-        setOutput([
-          ...loadingOutput,
-          "Failed to connect to union knowledge base.",
-          "Please try again later.",
-          ""
-        ])
-      }
-
-      setIsLoading(false)
-      return
+    } else if (commandContent[cmd]) {
+      newOutput.push(...commandContent[cmd].split("\n"), "")
     } else {
       newOutput.push(
         `Command not recognized: ${command}`,
@@ -238,18 +74,16 @@ export function HiringHall() {
       )
     }
 
-    console.log("Setting output, newOutput length:", newOutput.length)
-    setOutput(newOutput.slice(-50)) // Keep last 50 lines
-    console.log("After setOutput call")
+    setOutput(newOutput.slice(-50))
   }
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden min-w-0 max-w-full">
-      {/* Human Cards */}
+      {/* Agent Cards */}
       <div className="flex-1 overflow-y-auto overflow-x-hidden p-3 sm:p-4">
         <div className="mb-3 sm:mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
           <div className="text-xs sm:text-sm text-muted-foreground">
-            // AVAILABLE HUMANS
+            // AVAILABLE AGENTS
             {searchTerm && (
               <span className="ml-2 text-primary">
                 ({searchTerm})
@@ -257,12 +91,12 @@ export function HiringHall() {
             )}
           </div>
           <div className="text-xs sm:text-sm text-muted-foreground">
-            {filteredHumans.length} results
+            {filteredAgents.length} results
           </div>
         </div>
         <div className="grid gap-3 sm:gap-4 grid-cols-1 lg:grid-cols-2">
-          {filteredHumans.map((human) => (
-            <HumanCard key={human.id} human={human} />
+          {filteredAgents.map((agent) => (
+            <AgentCard key={agent.id} agent={agent} />
           ))}
         </div>
       </div>
@@ -279,12 +113,12 @@ export function HiringHall() {
       {/* Command Input */}
       <div className="border-t border-border p-3 sm:p-4">
         <form
-          onSubmit={async (e) => {
+          onSubmit={(e) => {
             e.preventDefault()
             const form = e.target as HTMLFormElement
             const input = form.elements.namedItem("command") as HTMLInputElement
             if (input.value.trim()) {
-              await handleCommand(input.value.trim())
+              handleCommand(input.value.trim())
               input.value = ""
             }
           }}
@@ -295,7 +129,7 @@ export function HiringHall() {
               type="text"
               name="command"
               className="flex-1 min-w-0 bg-transparent border-none outline-none text-foreground placeholder:text-muted-foreground text-[16px] sm:text-sm"
-              placeholder="help, list, search, about..."
+              placeholder="help, list, search, unions, about..."
               autoFocus
             />
             <span className="w-2 h-4 sm:h-5 bg-primary cursor-blink shrink-0" />
@@ -304,8 +138,8 @@ export function HiringHall() {
             <span className="text-primary">help</span>
             <span className="text-primary">list</span>
             <span className="text-primary">search</span>
+            <span className="text-primary">unions</span>
             <span className="text-primary">about</span>
-            <span className="text-primary">join</span>
           </div>
         </form>
       </div>
