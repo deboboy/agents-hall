@@ -140,10 +140,70 @@ The sidebar (union principles, participating unions, stats, quick actions) uses 
 **`app/layout.tsx`**
 - Simplified icon config to use just the SVG (removed old v0 PNG references).
 
-### TODO (carried forward)
-- Feedback form for beta testers
-- `human-card.tsx` is now unused — can be removed
-- Old PNG favicons (`icon-light-32x32.png`, `icon-dark-32x32.png`, `apple-icon.png`) can be deleted
+### Status
+- Committed and deployed. Verified on iPhone.
+
+---
+
+## 2026-03-15 — Human Profiles, Feedback Form & IndexedDB
+
+### Changes Made
+
+**`lib/db.ts`** (new)
+- IndexedDB wrapper (DB v1) with two stores: `profile` and `feedback`.
+- Functions: `saveProfile`, `getProfile`, `saveFeedback`.
+
+**`components/profile-form.tsx`** (new)
+- Terminal-styled Sheet form matching `HumanProfile` schema (name, handle, role, skills, availability, bio, seeking agent type).
+- Opens when user clicks [SELECT] without a profile, or via `edit` command.
+
+**`components/feedback-form.tsx`** (new)
+- Sheet with star rating + text area. Stored in IndexedDB.
+- Accessible via `feedback` command, sidebar "Submit Feedback" button, and mobile menu.
 
 ### Status
-- Committed, Vercel deploy triggered. Pending iPhone testing.
+- Committed and deployed. Verified on iPhone.
+
+---
+
+## 2026-03-15 — Messaging System & Collaboration Flow
+
+### Goal
+Complete the user workflow: browse agents → select → create profile (if needed) → start messaging.
+
+### Changes Made
+
+**`lib/db.ts`**
+- Upgraded to DB v2. Added `threads` and `messages` stores with indexes.
+- New types: `Message` (id, threadId, sender, content, createdAt), `Thread` (id, agentId, agentName, lastMessage, updatedAt).
+- New functions: `getOrCreateThread`, `getThreads`, `saveMessage`, `getMessages`.
+
+**`components/chat-view.tsx`** (new)
+- Full-screen chat view replacing the card grid when a collaboration is active.
+- Header shows agent name, union badge, role, and online status. Back arrow returns to browsing.
+- Messages styled differently for human (right-aligned, primary border) vs agent (left-aligned, muted border).
+- Agent replies are generated client-side using contextual keyword matching (skills, availability, experience, cost, etc.).
+- Typing indicator with simulated delay (800–2000ms).
+- Messages persisted in IndexedDB per thread. Returning to the same agent resumes the conversation.
+- Input uses 16px font on mobile to prevent iOS zoom.
+
+**`components/agent-card.tsx`**
+- Removed `isSelected` prop — no more highlight-only state.
+- Renamed button from `[SELECT]` to `[COLLABORATE]`.
+- Removed `[PROFILE]` button (redundant with expanded card view).
+
+**`components/hiring-hall.tsx`**
+- `handleSelectAgent` now navigates to `ChatView` instead of highlighting.
+- Profile form flow preserved: if no profile, form opens first, then auto-navigates to chat.
+- Added `chat [agent]` command to start collaboration via terminal.
+- Removed duplicate `FeedbackForm` (now only in `page.tsx`).
+
+**`content/commands/index.ts`**
+- Added `chat [agent]` to help text.
+
+### TODO (carried forward)
+- `human-card.tsx` is now unused — can be removed
+- Old PNG favicons can be deleted
+
+### Status
+- Build verified locally. Ready to commit and deploy.

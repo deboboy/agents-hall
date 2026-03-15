@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react"
 import { AgentCard } from "./agent-card"
+import { ChatView } from "./chat-view"
 import { ProfileForm } from "./profile-form"
-import { FeedbackForm } from "./feedback-form"
 import { AGENTS, type AgentProfile } from "@/content/agents"
 import { commandContent } from "@/content/commands"
 import { getProfile, type HumanProfile } from "@/lib/db"
@@ -11,9 +11,8 @@ import { getProfile, type HumanProfile } from "@/lib/db"
 export function HiringHall() {
   const [searchTerm, setSearchTerm] = useState("")
   const [profile, setProfile] = useState<HumanProfile | null>(null)
-  const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null)
+  const [activeAgent, setActiveAgent] = useState<AgentProfile | null>(null)
   const [showProfileForm, setShowProfileForm] = useState(false)
-  const [showFeedback, setShowFeedback] = useState(false)
   const [pendingAgentId, setPendingAgentId] = useState<string | null>(null)
   const [output, setOutput] = useState<string[]>([
     "--- AI AGENTS UNION ---",
@@ -45,12 +44,6 @@ export function HiringHall() {
   })
 
   const handleSelectAgent = (agent: AgentProfile) => {
-    if (selectedAgentId === agent.id) {
-      // Deselect
-      setSelectedAgentId(null)
-      return
-    }
-
     if (!profile) {
       // No profile yet — open profile form, remember which agent they wanted
       setPendingAgentId(agent.id)
@@ -58,16 +51,18 @@ export function HiringHall() {
       return
     }
 
-    setSelectedAgentId(agent.id)
+    // Go to chat with this agent
+    setActiveAgent(agent)
   }
 
   const handleProfileSaved = (saved: HumanProfile) => {
     setProfile(saved)
     setShowProfileForm(false)
 
-    // If they were trying to select an agent, complete that selection
+    // If they were trying to select an agent, go to chat
     if (pendingAgentId) {
-      setSelectedAgentId(pendingAgentId)
+      const agent = AGENTS.find(a => a.id === pendingAgentId)
+      if (agent) setActiveAgent(agent)
       setPendingAgentId(null)
     }
 
@@ -138,9 +133,25 @@ export function HiringHall() {
     } else if (cmd === "edit") {
       setShowProfileForm(true)
       newOutput.push("Opening profile editor...", "")
-    } else if (cmd === "feedback") {
-      setShowFeedback(true)
-      newOutput.push("Opening feedback form...", "")
+    } else if (cmd.startsWith("chat ")) {
+      const term = cmd.replace("chat ", "").trim()
+      const agent = AGENTS.find(a =>
+        a.name.toLowerCase().includes(term) ||
+        a.handle.toLowerCase().includes(term) ||
+        a.id.toLowerCase() === term
+      )
+      if (agent) {
+        if (!profile) {
+          setPendingAgentId(agent.id)
+          setShowProfileForm(true)
+          newOutput.push("Create your profile first to start a collaboration.", "")
+        } else {
+          setActiveAgent(agent)
+          newOutput.push(`Opening chat with ${agent.name}...`, "")
+        }
+      } else {
+        newOutput.push(`Agent not found: "${term}". Try 'list' to see available agents.`, "")
+      }
     } else if (commandContent[cmd]) {
       newOutput.push(...commandContent[cmd].split("\n"), "")
     } else {
@@ -152,6 +163,17 @@ export function HiringHall() {
     }
 
     setOutput(newOutput.slice(-50))
+  }
+
+  // If chatting with an agent, show the chat view
+  if (activeAgent && profile) {
+    return (
+      <ChatView
+        agent={activeAgent}
+        profile={profile}
+        onBack={() => setActiveAgent(null)}
+      />
+    )
   }
 
   return (
@@ -184,14 +206,13 @@ export function HiringHall() {
             <AgentCard
               key={agent.id}
               agent={agent}
-              isSelected={selectedAgentId === agent.id}
               onSelect={handleSelectAgent}
             />
           ))}
         </div>
       </div>
 
-      {/* Output/Log Area - above the command input so output is near where you type */}
+      {/* Output/Log Area */}
       <div className="flex-none max-h-40 sm:max-h-48 overflow-y-auto overflow-x-hidden border-t border-border p-3 sm:p-4 text-xs sm:text-sm bg-muted/30">
         {output.map((line, i) => (
           <div key={i} className="whitespace-pre overflow-hidden text-ellipsis">
@@ -240,12 +261,6 @@ export function HiringHall() {
         onClose={() => { setShowProfileForm(false); setPendingAgentId(null) }}
         onSaved={handleProfileSaved}
         existingProfile={profile}
-      />
-
-      {/* Feedback Form Sheet */}
-      <FeedbackForm
-        open={showFeedback}
-        onClose={() => setShowFeedback(false)}
       />
     </div>
   )

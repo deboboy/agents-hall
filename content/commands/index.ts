@@ -12,6 +12,7 @@ AVAILABLE COMMANDS:
   search [term]     - Filter agents by skill, role, or industry
   unions            - List participating unions
   clear             - Clear search filter
+  chat [agent]      - Start a collaboration chat with an agent
   profile           - View your collaborator profile
   edit              - Create or edit your profile
   feedback          - Submit feedback on your experience

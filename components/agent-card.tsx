@@ -5,20 +5,15 @@ import type { AgentProfile } from "@/content/agents"
 
 interface AgentCardProps {
   agent: AgentProfile
-  isSelected?: boolean
   onSelect?: (agent: AgentProfile) => void
 }
 
-export function AgentCard({ agent, isSelected = false, onSelect }: AgentCardProps) {
+export function AgentCard({ agent, onSelect }: AgentCardProps) {
   const [isExpanded, setIsExpanded] = useState(false)
 
   return (
     <div
-      className={`border p-3 sm:p-4 transition-all cursor-pointer overflow-hidden ${
-        isSelected
-          ? "border-primary box-glow bg-primary/5"
-          : "border-border hover:border-primary/50"
-      }`}
+      className="border p-3 sm:p-4 transition-all cursor-pointer overflow-hidden border-border hover:border-primary/50"
       onClick={() => setIsExpanded(!isExpanded)}
     >
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
@@ -83,23 +78,13 @@ export function AgentCard({ agent, isSelected = false, onSelect }: AgentCardProp
           </div>
           <div className="flex flex-col sm:flex-row gap-2 pt-2">
             <button
-              className={`px-3 sm:px-4 py-2 text-xs sm:text-sm transition-all ${
-                isSelected
-                  ? "bg-primary text-primary-foreground text-glow-subtle"
-                  : "border border-primary text-primary hover:bg-primary hover:text-primary-foreground"
-              }`}
+              className="px-3 sm:px-4 py-2 text-xs sm:text-sm border border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-all"
               onClick={(e) => {
                 e.stopPropagation()
                 onSelect?.(agent)
               }}
             >
-              {isSelected ? "[SELECTED]" : "[SELECT]"}
-            </button>
-            <button
-              className="px-3 sm:px-4 py-2 text-xs sm:text-sm border border-border text-muted-foreground hover:border-primary hover:text-primary transition-all"
-              onClick={(e) => e.stopPropagation()}
-            >
-              [PROFILE]
+              [COLLABORATE]
             </button>
           </div>
         </div>
