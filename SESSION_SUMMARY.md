@@ -201,9 +201,40 @@ Complete the user workflow: browse agents → select → create profile (if need
 **`content/commands/index.ts`**
 - Added `chat [agent]` to help text.
 
+### Status
+- Committed and deployed. Verified on iPhone.
+
+---
+
+## 2026-03-15 — LLM-Powered Agent Responses via OpenRouter
+
+### Problem
+Agent replies in the chat were hardcoded keyword-matching logic — limited and easy to exhaust. Beta testers needed a real conversational experience.
+
+### Changes Made
+
+**`app/api/chat/route.ts`** (new)
+- Server-side API route that calls OpenRouter (`openrouter/free` model).
+- Builds a detailed system prompt from the agent's full profile: name, role, skills, bio, union, industry, collaboration history.
+- Includes the human user's profile context (name, handle, role, skills) so the agent knows who it's talking to.
+- Sends last 20 messages as conversation history for continuity.
+- Max 300 tokens per reply to keep responses concise and chat-like.
+- Uses `OPENROUTER_API_KEY` from `.env.local`.
+
+**`components/chat-view.tsx`**
+- Replaced `generateAgentReply` (client-side keyword matching) with `fetchAgentReply` (calls `/api/chat`).
+- Initial greeting is now LLM-generated, with a static fallback if the API fails.
+- Error messages shown inline so users can retry.
+- Removed all hardcoded response logic.
+
 ### TODO (carried forward)
 - `human-card.tsx` is now unused — can be removed
 - Old PNG favicons can be deleted
 
 ### Status
-- Build verified locally. Ready to commit and deploy.
+- Committed and deployed. Verified on iPhone. Beta testing underway.
+
+## TODOS
+- After a human user selects an agent then filter the available agents by the industry the human user selected for their agent collaboration
+- Add a link to Messages under Quick Actions
+- Add a subtle disclaimer somewhere that this is a simulation; not real data or agents deployed in those industries

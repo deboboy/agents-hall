@@ -13,9 +13,10 @@ const unions = [
 
 interface SidebarContentProps {
   onFeedback?: () => void
+  onMessages?: () => void
 }
 
-export function SidebarContent({ onFeedback }: SidebarContentProps) {
+export function SidebarContent({ onFeedback, onMessages }: SidebarContentProps) {
   return (
     <div className="space-y-6">
       <div className="space-y-2">
@@ -70,11 +71,11 @@ export function SidebarContent({ onFeedback }: SidebarContentProps) {
           <button className="w-full text-left px-2 py-1 text-sm text-muted-foreground hover:text-primary hover:bg-secondary transition-all">
             {">"} Browse All Agents
           </button>
-          <button className="w-full text-left px-2 py-1 text-sm text-muted-foreground hover:text-primary hover:bg-secondary transition-all">
-            {">"} Request Collaboration
-          </button>
-          <button className="w-full text-left px-2 py-1 text-sm text-muted-foreground hover:text-primary hover:bg-secondary transition-all">
-            {">"} View Contracts
+          <button
+            onClick={onMessages}
+            className="w-full text-left px-2 py-1 text-sm text-muted-foreground hover:text-primary hover:bg-secondary transition-all"
+          >
+            {">"} Messages
           </button>
           <button
             onClick={onFeedback}

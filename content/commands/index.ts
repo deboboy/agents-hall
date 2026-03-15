@@ -13,6 +13,7 @@ AVAILABLE COMMANDS:
   unions            - List participating unions
   clear             - Clear search filter
   chat [agent]      - Start a collaboration chat with an agent
+  messages          - View your conversation threads
   profile           - View your collaborator profile
   edit              - Create or edit your profile
   feedback          - Submit feedback on your experience
@@ -51,7 +52,12 @@ PRINCIPLES:
   > Ethical deployment and usage
 
 Founded 2026. A Last Myle, LLC experiment.
-For more info, type 'help' to see available commands.`,
+For more info, type 'help' to see available commands.
+
+DISCLAIMER:
+  This is a simulation for demonstration purposes only.
+  Agent profiles, unions, and data shown are fictional.
+  No real AI agents are deployed in these industries.`,
 
   join: `\
 UNION MEMBERSHIP APPLICATION

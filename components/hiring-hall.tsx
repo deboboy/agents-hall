@@ -6,14 +6,22 @@ import { ChatView } from "./chat-view"
 import { ProfileForm } from "./profile-form"
 import { AGENTS, type AgentProfile } from "@/content/agents"
 import { commandContent } from "@/content/commands"
-import { getProfile, type HumanProfile } from "@/lib/db"
+import { getProfile, getThreads, type HumanProfile, type Thread } from "@/lib/db"
 
-export function HiringHall() {
+interface HiringHallProps {
+  showMessages?: boolean
+  onMessagesHandled?: () => void
+}
+
+export function HiringHall({ showMessages, onMessagesHandled }: HiringHallProps) {
   const [searchTerm, setSearchTerm] = useState("")
+  const [industryFilter, setIndustryFilter] = useState<string | null>(null)
   const [profile, setProfile] = useState<HumanProfile | null>(null)
   const [activeAgent, setActiveAgent] = useState<AgentProfile | null>(null)
   const [showProfileForm, setShowProfileForm] = useState(false)
   const [pendingAgentId, setPendingAgentId] = useState<string | null>(null)
+  const [threads, setThreads] = useState<Thread[]>([])
+  const [showThreads, setShowThreads] = useState(false)
   const [output, setOutput] = useState<string[]>([
     "--- AI AGENTS UNION ---",
     "--- HIRING HALL ---",
@@ -31,7 +39,19 @@ export function HiringHall() {
     })
   }, [])
 
+  // Handle Messages request from sidebar
+  useEffect(() => {
+    if (showMessages) {
+      getThreads().then(t => {
+        setThreads(t)
+        setShowThreads(true)
+      })
+      onMessagesHandled?.()
+    }
+  }, [showMessages, onMessagesHandled])
+
   const filteredAgents = AGENTS.filter(agent => {
+    if (industryFilter && agent.union.industry !== industryFilter) return false
     if (!searchTerm) return true
     const searchLower = searchTerm.toLowerCase()
     return (
@@ -51,7 +71,8 @@ export function HiringHall() {
       return
     }
 
-    // Go to chat with this agent
+    // Go to chat with this agent, filter by their industry
+    setIndustryFilter(agent.union.industry)
     setActiveAgent(agent)
   }
 
@@ -62,7 +83,10 @@ export function HiringHall() {
     // If they were trying to select an agent, go to chat
     if (pendingAgentId) {
       const agent = AGENTS.find(a => a.id === pendingAgentId)
-      if (agent) setActiveAgent(agent)
+      if (agent) {
+        setIndustryFilter(agent.union.industry)
+        setActiveAgent(agent)
+      }
       setPendingAgentId(null)
     }
 
@@ -108,7 +132,8 @@ export function HiringHall() {
       )
     } else if (cmd === "clear") {
       setSearchTerm("")
-      newOutput.push("Search filter cleared.", "")
+      setIndustryFilter(null)
+      newOutput.push("Filters cleared.", "")
     } else if (cmd === "profile") {
       if (profile) {
         newOutput.push(
@@ -146,12 +171,19 @@ export function HiringHall() {
           setShowProfileForm(true)
           newOutput.push("Create your profile first to start a collaboration.", "")
         } else {
+          setIndustryFilter(agent.union.industry)
           setActiveAgent(agent)
           newOutput.push(`Opening chat with ${agent.name}...`, "")
         }
       } else {
         newOutput.push(`Agent not found: "${term}". Try 'list' to see available agents.`, "")
       }
+    } else if (cmd === "messages") {
+      getThreads().then(t => {
+        setThreads(t)
+        setShowThreads(true)
+      })
+      newOutput.push("Loading messages...", "")
     } else if (commandContent[cmd]) {
       newOutput.push(...commandContent[cmd].split("\n"), "")
     } else {
@@ -171,8 +203,66 @@ export function HiringHall() {
       <ChatView
         agent={activeAgent}
         profile={profile}
-        onBack={() => setActiveAgent(null)}
+        onBack={() => {
+          setActiveAgent(null)
+          setShowThreads(false)
+        }}
       />
+    )
+  }
+
+  // Show threads/messages list
+  if (showThreads) {
+    return (
+      <div className="flex-1 flex flex-col overflow-hidden min-w-0 max-w-full">
+        <div className="flex-none border-b border-border p-3 sm:p-4 flex items-center gap-3">
+          <button
+            onClick={() => setShowThreads(false)}
+            className="text-muted-foreground hover:text-primary transition-colors text-sm"
+          >
+            &larr; Back
+          </button>
+          <span className="text-xs sm:text-sm text-muted-foreground">// MESSAGES</span>
+        </div>
+        <div className="flex-1 overflow-y-auto p-3 sm:p-4">
+          {threads.length === 0 ? (
+            <div className="text-sm text-muted-foreground py-8 text-center">
+              No conversations yet. Select an agent to start collaborating.
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {threads.map(thread => {
+                const agent = AGENTS.find(a => a.id === thread.agentId)
+                return (
+                  <button
+                    key={thread.id}
+                    onClick={() => {
+                      if (agent && profile) {
+                        setIndustryFilter(agent.union.industry)
+                        setActiveAgent(agent)
+                      }
+                    }}
+                    className="w-full text-left border border-border p-3 hover:border-primary/50 transition-colors"
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm text-primary">{thread.agentName}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(thread.updatedAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                    {agent && (
+                      <div className="text-xs text-accent mb-1">{agent.union.abbr} &middot; {agent.role}</div>
+                    )}
+                    {thread.lastMessage && (
+                      <div className="text-xs text-muted-foreground truncate">{thread.lastMessage}</div>
+                    )}
+                  </button>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      </div>
     )
   }
 
@@ -183,6 +273,18 @@ export function HiringHall() {
         <div className="mb-3 sm:mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
           <div className="text-xs sm:text-sm text-muted-foreground">
             // AVAILABLE AGENTS
+            {industryFilter && (
+              <span className="ml-2 text-accent">
+                [{industryFilter}]
+                <button
+                  onClick={() => setIndustryFilter(null)}
+                  className="ml-1 text-muted-foreground hover:text-primary transition-colors"
+                  title="Clear filter"
+                >
+                  x
+                </button>
+              </span>
+            )}
             {searchTerm && (
               <span className="ml-2 text-primary">
                 ({searchTerm})
@@ -249,6 +351,7 @@ export function HiringHall() {
             <span className="text-primary">help</span>
             <span className="text-primary">list</span>
             <span className="text-primary">search</span>
+            <span className="text-primary">messages</span>
             <span className="text-primary">profile</span>
             <span className="text-primary">feedback</span>
           </div>

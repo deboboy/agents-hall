@@ -10,6 +10,7 @@ import { FeedbackForm } from "@/components/feedback-form"
 export default function HomePage() {
   const [entered, setEntered] = useState(false)
   const [showFeedback, setShowFeedback] = useState(false)
+  const [messagesRequested, setMessagesRequested] = useState(false)
 
   if (!entered) {
     return <SplashScreen onEnter={() => setEntered(true)} />
@@ -17,10 +18,10 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen max-w-full overflow-x-hidden flex flex-col crt-scanlines screen-flicker">
-      <TerminalHeader onFeedback={() => setShowFeedback(true)} />
+      <TerminalHeader onFeedback={() => setShowFeedback(true)} onMessages={() => setMessagesRequested(true)} />
       <div className="flex-1 flex overflow-hidden">
-        <UnionSidebar onFeedback={() => setShowFeedback(true)} />
-        <HiringHall />
+        <UnionSidebar onFeedback={() => setShowFeedback(true)} onMessages={() => setMessagesRequested(true)} />
+        <HiringHall showMessages={messagesRequested} onMessagesHandled={() => setMessagesRequested(false)} />
       </div>
       <FeedbackForm
         open={showFeedback}

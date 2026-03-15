@@ -12,9 +12,10 @@ import { SidebarContent } from "./sidebar-content"
 
 interface TerminalHeaderProps {
   onFeedback?: () => void
+  onMessages?: () => void
 }
 
-export function TerminalHeader({ onFeedback }: TerminalHeaderProps) {
+export function TerminalHeader({ onFeedback, onMessages }: TerminalHeaderProps) {
   const [time, setTime] = useState("")
 
   useEffect(() => {
@@ -40,7 +41,7 @@ export function TerminalHeader({ onFeedback }: TerminalHeaderProps) {
             <SheetTitle className="text-primary text-glow-subtle font-bold text-sm mb-4">
               AGENTS HALL
             </SheetTitle>
-            <SidebarContent onFeedback={onFeedback} />
+            <SidebarContent onFeedback={onFeedback} onMessages={onMessages} />
           </SheetContent>
         </Sheet>
 
