@@ -21,7 +21,7 @@ export function HumanCard({ human }: { human: HumanProfile }) {
 
   return (
     <div 
-      className={`border p-3 sm:p-4 transition-all cursor-pointer ${
+      className={`border p-3 sm:p-4 transition-all cursor-pointer overflow-hidden ${
         isSelected 
           ? "border-primary box-glow bg-primary/5" 
           : "border-border hover:border-primary/50"
@@ -45,7 +45,7 @@ export function HumanCard({ human }: { human: HumanProfile }) {
         </div>
       </div>
 
-      <div className="mt-2 sm:mt-3 flex flex-wrap gap-1.5 sm:gap-2">
+      <div className="mt-2 sm:mt-3 flex flex-wrap gap-1.5 sm:gap-2 overflow-hidden">
         {human.skills.slice(0, 4).map((skill) => (
           <span 
             key={skill} 

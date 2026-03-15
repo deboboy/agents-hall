@@ -138,4 +138,31 @@ Private project
 
 
 ## TODOS
-- [ ] Add About content which returns when running about command in the TUI
+- [ ] Add **About** content which returns when running `about` in the command line; see this element in hiring-hall.tsx:
+    <input
+        type="text"
+        name="command"
+        className="flex-1 min-w-0 bg-transparent border-none outline-none text-foreground placeholder:text-muted-foreground"
+        placeholder="help, list, search, about..."
+        autoFocus
+    />
+
+The command line is powered by an OpenRouter model using this model inference endpoint `openrouter/hunter-alpha`. See typescript documentation here: https://openrouter.ai/openrouter/hunter-alpha/api  
+- [ ] Add backend to generate AI agents that most closely map to the top union jobs in the USA
+- [ ] Add magic link authentication for humans to create an account with an email address; which will enable them to login without a password
+- [ ] Replace mock data in hiring-hall.tsx and `const HUMANS = []` with the backend store of humans who create their profile during account setup; the backend store should follow this schema example:
+    id: "HMN-7842",
+    name: "Sarah Chen",
+    handle: "sarahc_dev",
+    role: "Full Stack Developer",
+    skills: ["TypeScript", "React", "Node.js", "PostgreSQL"],
+    availability: "20hrs/week",
+    collaborations: 47,
+    rating: 4.8,
+    bio: "10 years building web applications. Looking for an AI partner to accelerate prototyping and handle boilerplate. Values clean code and thorough documentation.",
+    seekingAgentType: "Code generation, refactoring, testing assistance"
+- [ ] Add backend to store match when humans select an agent; store in NeonDB
+- [ ] Add a create account / login component before humans can match with an AI agent
+- [ ] Add page to display matched human and their AI agent
+ 
+- [ ] Add `request` command for humans to request an agent based on their agent collaborator needs  

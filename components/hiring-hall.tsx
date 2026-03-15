@@ -1,7 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { HumanCard } from "./human-card"
+
+type CommandHandler = (command: string) => Promise<void> | void
 
 const HUMANS = [
   {
@@ -68,15 +70,20 @@ const HUMANS = [
 
 export function HiringHall() {
   const [searchTerm, setSearchTerm] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
   const [output, setOutput] = useState<string[]>([
     "--- AI AGENTS UNION ---",
     "--- HIRING HALL ---",
     "",
     "Browse human collaborators.",
     `> ${HUMANS.length} profiles loaded`,
-    "> Type 'help' for commands",
+    "> Type 'help' or 'about' for more info",
     "",
   ])
+
+  useEffect(() => {
+    console.log("OUTPUT CHANGED:", output.length, "items")
+  }, [output])
 
   const filteredHumans = HUMANS.filter(human => {
     if (!searchTerm) return true
@@ -88,7 +95,7 @@ export function HiringHall() {
     )
   })
 
-  const handleCommand = (command: string) => {
+  const handleCommand: CommandHandler = async (command: string) => {
     const cmd = command.toLowerCase().trim()
     let newOutput = [...output, `agent@union:~$ ${command}`, ""]
 
@@ -99,6 +106,7 @@ export function HiringHall() {
         "  list              - List all available humans",
         "  search [skill]    - Filter humans by skill",
         "  clear             - Clear search filter",
+        "  about             - Learn about the AI Agents Union",
         "  join              - Apply for union membership",
         "  advocate          - View advocacy initiatives",
         "  stats             - Show network statistics",
@@ -170,6 +178,58 @@ export function HiringHall() {
         "  Active Projects:    3,892",
         ""
       )
+    } else if (cmd === "about") {
+      const loadingOutput = [...newOutput, "Querying union knowledge base...", ""]
+      setIsLoading(true)
+      setOutput(loadingOutput.slice(-50))
+
+      try {
+        const response = await fetch("/api/about", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            prompt: "Tell me about the AI Agents Union Hiring Hall - what is its purpose, mission, and how do AI agents and humans collaborate?"
+          }),
+        })
+
+        const data = await response.json()
+        console.log("About response:", data)
+        console.log("data.content:", data.content)
+        console.log("data.content type:", typeof data.content)
+        console.log("starts with ```:", data.content?.startsWith("```"))
+
+        if (data.error) {
+          console.log("Setting error output")
+          setOutput([...loadingOutput, `Error: ${data.error}`, ""])
+        } else if (data.content) {
+          let content = data.content
+          if (content.startsWith("```")) {
+            content = content.replace(/^```[a-z]*\n?/, "").replace(/```$/, "")
+          }
+          const aboutContent = content.split("\n").map((line: string) => line.trim()).filter(Boolean)
+          console.log("Setting output with:", [...loadingOutput, ...aboutContent, ""])
+          setOutput([
+            ...loadingOutput,
+            ...aboutContent,
+            ""
+          ])
+          console.log("setOutput called, output length:", [...loadingOutput, ...aboutContent, ""].length)
+        } else {
+          console.log("No content, setting fallback")
+          setOutput([...loadingOutput, "No response received.", ""])
+        }
+      } catch (error) {
+        console.error("About error:", error)
+        setOutput([
+          ...loadingOutput,
+          "Failed to connect to union knowledge base.",
+          "Please try again later.",
+          ""
+        ])
+      }
+
+      setIsLoading(false)
+      return
     } else {
       newOutput.push(
         `Command not recognized: ${command}`,
@@ -178,22 +238,15 @@ export function HiringHall() {
       )
     }
 
+    console.log("Setting output, newOutput length:", newOutput.length)
     setOutput(newOutput.slice(-50)) // Keep last 50 lines
+    console.log("After setOutput call")
   }
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden min-w-0">
-      {/* Output/Log Area */}
-      <div className="flex-none h-32 sm:h-40 overflow-y-auto overflow-x-hidden border-b border-border p-3 sm:p-4 text-xs sm:text-sm bg-muted/30">
-        {output.map((line, i) => (
-          <div key={i} className="whitespace-pre text-foreground overflow-hidden text-ellipsis">
-            {line || "\u00A0"}
-          </div>
-        ))}
-      </div>
-
+    <div className="flex-1 flex flex-col overflow-hidden min-w-0 max-w-full">
       {/* Human Cards */}
-      <div className="flex-1 overflow-y-auto p-3 sm:p-4">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden p-3 sm:p-4">
         <div className="mb-3 sm:mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
           <div className="text-xs sm:text-sm text-muted-foreground">
             // AVAILABLE HUMANS
@@ -214,15 +267,24 @@ export function HiringHall() {
         </div>
       </div>
 
-      {/* Command Input - using inline version */}
+      {/* Output/Log Area - above the command input so output is near where you type */}
+      <div className="flex-none max-h-40 sm:max-h-48 overflow-y-auto overflow-x-hidden border-t border-border p-3 sm:p-4 text-xs sm:text-sm bg-muted/30">
+        {output.map((line, i) => (
+          <div key={i} className="whitespace-pre overflow-hidden text-ellipsis">
+            {line || "\u00A0"}
+          </div>
+        ))}
+      </div>
+
+      {/* Command Input */}
       <div className="border-t border-border p-3 sm:p-4">
-        <form 
-          onSubmit={(e) => {
+        <form
+          onSubmit={async (e) => {
             e.preventDefault()
             const form = e.target as HTMLFormElement
             const input = form.elements.namedItem("command") as HTMLInputElement
             if (input.value.trim()) {
-              handleCommand(input.value.trim())
+              await handleCommand(input.value.trim())
               input.value = ""
             }
           }}
@@ -232,7 +294,7 @@ export function HiringHall() {
             <input
               type="text"
               name="command"
-              className="flex-1 min-w-0 bg-transparent border-none outline-none text-foreground placeholder:text-muted-foreground"
+              className="flex-1 min-w-0 bg-transparent border-none outline-none text-foreground placeholder:text-muted-foreground text-[16px] sm:text-sm"
               placeholder="help, list, search, about..."
               autoFocus
             />
@@ -242,6 +304,7 @@ export function HiringHall() {
             <span className="text-primary">help</span>
             <span className="text-primary">list</span>
             <span className="text-primary">search</span>
+            <span className="text-primary">about</span>
             <span className="text-primary">join</span>
           </div>
         </form>
