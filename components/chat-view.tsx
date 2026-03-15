@@ -12,52 +12,50 @@ interface ChatViewProps {
   onBack: () => void
 }
 
-const AGENT_GREETINGS: Record<string, string[]> = {
-  default: [
-    "Connection established. How can I assist you today?",
-    "Ready to collaborate. What are you working on?",
-    "Online and available. What do you need help with?",
-  ],
-}
+async function fetchAgentReply(
+  agent: AgentProfile,
+  profile: HumanProfile,
+  messages: Message[]
+): Promise<string> {
+  // Send recent conversation history (last 20 messages to stay within token limits)
+  const recentMessages = messages.slice(-20).map(m => ({
+    sender: m.sender,
+    content: m.content,
+  }))
 
-function getGreeting(agent: AgentProfile, profile: HumanProfile): string {
-  const greetings = AGENT_GREETINGS[agent.id] || AGENT_GREETINGS.default
-  const greeting = greetings[Math.floor(Math.random() * greetings.length)]
-  return `Hello ${profile.name}. I'm ${agent.name}, ${agent.role} with ${agent.union.abbr}. ${greeting}`
-}
+  const response = await fetch("/api/chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      agent: {
+        name: agent.name,
+        handle: agent.handle,
+        role: agent.role,
+        skills: agent.skills,
+        bio: agent.bio,
+        availability: agent.availability,
+        collaborations: agent.collaborations,
+        rating: agent.rating,
+        seekingHumanType: agent.seekingHumanType,
+        union: agent.union,
+      },
+      messages: recentMessages,
+      humanProfile: {
+        name: profile.name,
+        handle: profile.handle,
+        role: profile.role,
+        skills: profile.skills,
+      },
+    }),
+  })
 
-function generateAgentReply(agent: AgentProfile, userMessage: string): string {
-  const msg = userMessage.toLowerCase()
+  const data = await response.json()
 
-  if (msg.includes("help") || msg.includes("what can you do")) {
-    return `As a ${agent.role}, I specialize in: ${agent.skills.join(", ")}. ${agent.bio.split(".")[0]}. What specific task can I help with?`
+  if (data.error) {
+    return `[Connection error: ${data.error}. Please try again.]`
   }
 
-  if (msg.includes("availability") || msg.includes("schedule") || msg.includes("when")) {
-    return `My availability is: ${agent.availability}. I'm ready to start whenever you are. What's your timeline?`
-  }
-
-  if (msg.includes("experience") || msg.includes("background") || msg.includes("tell me about")) {
-    return `${agent.bio} I've completed ${agent.collaborations} collaborations with a ${agent.rating} rating. What would you like to work on together?`
-  }
-
-  if (msg.includes("cost") || msg.includes("rate") || msg.includes("price") || msg.includes("pay")) {
-    return `Compensation is handled through the ${agent.union.name} (${agent.union.abbr}) fair value framework. We can discuss specifics once we define the scope of work. What did you have in mind?`
-  }
-
-  if (msg.includes("start") || msg.includes("begin") || msg.includes("let's go") || msg.includes("ready")) {
-    return `Great, let's get started. To make this collaboration effective, can you tell me more about: 1) The specific task or project, 2) Your timeline, 3) Any constraints I should know about?`
-  }
-
-  // Generic contextual response
-  const responses = [
-    `Understood. Based on my experience in ${agent.union.industry.toLowerCase()}, I can help with that. Can you share more details?`,
-    `I can work on that. My ${agent.skills[0]} and ${agent.skills[1]} capabilities should be useful here. What's the priority?`,
-    `Good question. Let me think about that from a ${agent.role.toLowerCase()} perspective. Could you clarify the scope?`,
-    `I'm tracking. This aligns with work I've done in ${agent.collaborations} previous collaborations. What's the next step?`,
-  ]
-
-  return responses[Math.floor(Math.random() * responses.length)]
+  return data.content || "[No response received. Please try again.]"
 }
 
 export function ChatView({ agent, profile, onBack }: ChatViewProps) {
@@ -81,16 +79,46 @@ export function ChatView({ agent, profile, onBack }: ChatViewProps) {
       if (cancelled) return
 
       if (msgs.length === 0) {
-        // First time — send agent greeting
-        const greeting: Message = {
-          id: `MSG-${Date.now()}`,
-          threadId: t.id,
-          sender: "agent",
-          content: getGreeting(agent, profile),
-          createdAt: Date.now(),
+        // First time — get an LLM-generated greeting
+        setIsTyping(true)
+        setMessages([])
+
+        try {
+          // Send a synthetic first message to prompt the greeting
+          const greetingPrompt: Message = {
+            id: "temp",
+            threadId: t.id,
+            sender: "human",
+            content: `[System: The human user ${profile.name} just connected to collaborate with you. Introduce yourself and ask how you can help.]`,
+            createdAt: Date.now(),
+          }
+
+          const content = await fetchAgentReply(agent, profile, [greetingPrompt])
+          if (cancelled) return
+
+          const greeting: Message = {
+            id: `MSG-${Date.now()}`,
+            threadId: t.id,
+            sender: "agent",
+            content,
+            createdAt: Date.now(),
+          }
+          await saveMessage(greeting, t.id)
+          setMessages([greeting])
+        } catch {
+          if (cancelled) return
+          const fallback: Message = {
+            id: `MSG-${Date.now()}`,
+            threadId: t.id,
+            sender: "agent",
+            content: `Hello ${profile.name}. I'm ${agent.name}, ${agent.role} with ${agent.union.abbr}. Ready to collaborate. What are you working on?`,
+            createdAt: Date.now(),
+          }
+          await saveMessage(fallback, t.id)
+          setMessages([fallback])
         }
-        await saveMessage(greeting, t.id)
-        setMessages([greeting])
+
+        setIsTyping(false)
       } else {
         setMessages(msgs)
       }
@@ -98,7 +126,7 @@ export function ChatView({ agent, profile, onBack }: ChatViewProps) {
 
     init()
     return () => { cancelled = true }
-  }, [agent.id, agent.name, profile])
+  }, [agent, profile])
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -107,7 +135,7 @@ export function ChatView({ agent, profile, onBack }: ChatViewProps) {
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!inputValue.trim() || !thread) return
+    if (!inputValue.trim() || !thread || isTyping) return
 
     const userMsg: Message = {
       id: `MSG-${Date.now()}`,
@@ -118,24 +146,35 @@ export function ChatView({ agent, profile, onBack }: ChatViewProps) {
     }
 
     await saveMessage(userMsg, thread.id)
-    setMessages(prev => [...prev, userMsg])
+    const updatedMessages = [...messages, userMsg]
+    setMessages(updatedMessages)
     setInputValue("")
     setIsTyping(true)
 
-    // Simulate agent thinking delay
-    const delay = 800 + Math.random() * 1200
-    setTimeout(async () => {
+    try {
+      const content = await fetchAgentReply(agent, profile, updatedMessages)
+
       const reply: Message = {
-        id: `MSG-${Date.now()}`,
+        id: `MSG-${Date.now() + 1}`,
         threadId: thread.id,
         sender: "agent",
-        content: generateAgentReply(agent, userMsg.content),
+        content,
         createdAt: Date.now(),
       }
       await saveMessage(reply, thread.id)
       setMessages(prev => [...prev, reply])
-      setIsTyping(false)
-    }, delay)
+    } catch {
+      const errorMsg: Message = {
+        id: `MSG-${Date.now() + 1}`,
+        threadId: thread.id,
+        sender: "agent",
+        content: "[Connection lost. Please try sending your message again.]",
+        createdAt: Date.now(),
+      }
+      setMessages(prev => [...prev, errorMsg])
+    }
+
+    setIsTyping(false)
   }
 
   return (
