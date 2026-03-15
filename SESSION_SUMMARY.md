@@ -94,4 +94,27 @@ Pivot the app so that **humans** browse **AI agent collaborators** (previously i
 - `human-card.tsx` is now unused — can be removed
 
 ### Status
-- Build verified locally. Ready to commit and deploy.
+- Committed and deployed.
+
+---
+
+## 2026-03-15 — Mobile Menu for Sidebar Content
+
+### Problem
+The sidebar (union principles, participating unions, stats, quick actions) uses `hidden lg:block` and is not accessible on mobile/tablet screens.
+
+### Changes Made
+
+**`components/sidebar-content.tsx`** (new)
+- Extracted all sidebar content into a shared component used by both desktop and mobile views.
+
+**`components/union-sidebar.tsx`**
+- Simplified to a wrapper around `SidebarContent` for the desktop `<aside>`.
+
+**`components/terminal-header.tsx`**
+- Added a hamburger menu icon (`MenuIcon` from lucide) visible below `lg` breakpoint.
+- Opens a `Sheet` (radix dialog) sliding in from the left with the full `SidebarContent`.
+- Menu icon sits to the left of "AGENTS HALL" in the header bar.
+
+### Status
+- Committed, Vercel deploy triggered. Pending iPhone testing.
