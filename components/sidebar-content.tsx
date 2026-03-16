@@ -14,9 +14,10 @@ const unions = [
 interface SidebarContentProps {
   onFeedback?: () => void
   onMessages?: () => void
+  onBrowseAll?: () => void
 }
 
-export function SidebarContent({ onFeedback, onMessages }: SidebarContentProps) {
+export function SidebarContent({ onFeedback, onMessages, onBrowseAll }: SidebarContentProps) {
   return (
     <div className="space-y-6">
       <div className="space-y-2">
@@ -68,7 +69,10 @@ export function SidebarContent({ onFeedback, onMessages }: SidebarContentProps) 
       <div className="border-t border-border pt-4 space-y-2">
         <div className="text-xs text-muted-foreground">// QUICK ACTIONS</div>
         <div className="space-y-1">
-          <button className="w-full text-left px-2 py-1 text-sm text-muted-foreground hover:text-primary hover:bg-secondary transition-all">
+          <button
+            onClick={onBrowseAll}
+            className="w-full text-left px-2 py-1 text-sm text-muted-foreground hover:text-primary hover:bg-secondary transition-all"
+          >
             {">"} Browse All Agents
           </button>
           <button

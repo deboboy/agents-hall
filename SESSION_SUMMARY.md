@@ -234,7 +234,31 @@ Agent replies in the chat were hardcoded keyword-matching logic — limited and 
 ### Status
 - Committed and deployed. Verified on iPhone. Beta testing underway.
 
-## TODOS
-- After a human user selects an agent then filter the available agents by the industry the human user selected for their agent collaboration
-- Add a link to Messages under Quick Actions
-- Add a subtle disclaimer somewhere that this is a simulation; not real data or agents deployed in those industries
+## 2026-03-15 — Beta Release Touch-Ups
+
+### Changes Made
+
+**Industry Filter After Agent Selection** (`components/hiring-hall.tsx`)
+- Added `industryFilter` state. When a user selects an agent (card click or `chat` command), the grid filters to that agent's industry.
+- Filter badge `[Industry] x` shown next to "AVAILABLE AGENTS" header; click `x` to clear.
+- `clear` command now resets both search and industry filter.
+
+**Messages View** (`components/sidebar-content.tsx`, `terminal-header.tsx`, `union-sidebar.tsx`, `app/page.tsx`, `components/hiring-hall.tsx`)
+- Added "Messages" button under Quick Actions in sidebar (desktop + mobile menu).
+- Added `messages` terminal command.
+- Both open a thread list view showing past conversations (agent name, union, role, last message, date).
+- Clicking a thread resumes the chat. Empty state shown if no conversations exist.
+- `onMessages` callback wired from sidebar → page.tsx → HiringHall via `showMessages` prop.
+
+**Simulation Disclaimer** (`content/commands/index.ts`)
+- Added DISCLAIMER block at the end of the `about` command output stating this is a simulation with fictional data.
+
+**Help Command** (`content/commands/index.ts`)
+- Added `messages` to the help text.
+
+### TODO (carried forward)
+- `human-card.tsx` is now unused — can be removed
+- Old PNG favicons can be deleted
+
+### Status
+- Committed and deployed. Awaiting beta tester verification.

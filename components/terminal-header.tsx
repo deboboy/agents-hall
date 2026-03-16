@@ -13,9 +13,10 @@ import { SidebarContent } from "./sidebar-content"
 interface TerminalHeaderProps {
   onFeedback?: () => void
   onMessages?: () => void
+  onBrowseAll?: () => void
 }
 
-export function TerminalHeader({ onFeedback, onMessages }: TerminalHeaderProps) {
+export function TerminalHeader({ onFeedback, onMessages, onBrowseAll }: TerminalHeaderProps) {
   const [time, setTime] = useState("")
 
   useEffect(() => {
@@ -41,7 +42,7 @@ export function TerminalHeader({ onFeedback, onMessages }: TerminalHeaderProps) 
             <SheetTitle className="text-primary text-glow-subtle font-bold text-sm mb-4">
               AGENTS HALL
             </SheetTitle>
-            <SidebarContent onFeedback={onFeedback} onMessages={onMessages} />
+            <SidebarContent onFeedback={onFeedback} onMessages={onMessages} onBrowseAll={onBrowseAll} />
           </SheetContent>
         </Sheet>
 

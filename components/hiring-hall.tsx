@@ -11,9 +11,11 @@ import { getProfile, getThreads, type HumanProfile, type Thread } from "@/lib/db
 interface HiringHallProps {
   showMessages?: boolean
   onMessagesHandled?: () => void
+  browseAll?: boolean
+  onBrowseAllHandled?: () => void
 }
 
-export function HiringHall({ showMessages, onMessagesHandled }: HiringHallProps) {
+export function HiringHall({ showMessages, onMessagesHandled, browseAll, onBrowseAllHandled }: HiringHallProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [industryFilter, setIndustryFilter] = useState<string | null>(null)
   const [profile, setProfile] = useState<HumanProfile | null>(null)
@@ -49,6 +51,17 @@ export function HiringHall({ showMessages, onMessagesHandled }: HiringHallProps)
       onMessagesHandled?.()
     }
   }, [showMessages, onMessagesHandled])
+
+  // Handle Browse All request from sidebar
+  useEffect(() => {
+    if (browseAll) {
+      setActiveAgent(null)
+      setShowThreads(false)
+      setSearchTerm("")
+      setIndustryFilter(null)
+      onBrowseAllHandled?.()
+    }
+  }, [browseAll, onBrowseAllHandled])
 
   const filteredAgents = AGENTS.filter(agent => {
     if (industryFilter && agent.union.industry !== industryFilter) return false
