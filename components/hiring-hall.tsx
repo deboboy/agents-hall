@@ -129,20 +129,6 @@ export function HiringHall({ showMessages, onMessagesHandled, browseAll, onBrows
         newOutput.push(`  [${abbr}] ${union.name} — ${union.industry} (${count} agents)`)
       }
       newOutput.push("")
-    } else if (cmd.startsWith("search ")) {
-      const term = cmd.replace("search ", "").trim()
-      setSearchTerm(term)
-      const matches = AGENTS.filter(a =>
-        a.skills.some(s => s.toLowerCase().includes(term.toLowerCase())) ||
-        a.role.toLowerCase().includes(term.toLowerCase()) ||
-        a.union.industry.toLowerCase().includes(term.toLowerCase()) ||
-        a.union.abbr.toLowerCase().includes(term.toLowerCase())
-      )
-      newOutput.push(
-        `Searching for: "${term}"...`,
-        `Found ${matches.length} matching agents.`,
-        ""
-      )
     } else if (cmd === "clear") {
       setSearchTerm("")
       setIndustryFilter(null)
@@ -158,38 +144,15 @@ export function HiringHall({ showMessages, onMessagesHandled, browseAll, onBrows
           `  Seeking: ${profile.seekingAgentType}`,
           `  ID:      ${profile.id}`,
           "",
-          "Type 'edit' to update your profile.",
+          "Select your profile in the top right to update it.",
           ""
         )
       } else {
         newOutput.push(
           "No profile found.",
-          "Select an agent or type 'edit' to create your profile.",
+          "Select an agent to create your profile and start collaborating.",
           ""
         )
-      }
-    } else if (cmd === "edit") {
-      setShowProfileForm(true)
-      newOutput.push("Opening profile editor...", "")
-    } else if (cmd.startsWith("chat ")) {
-      const term = cmd.replace("chat ", "").trim()
-      const agent = AGENTS.find(a =>
-        a.name.toLowerCase().includes(term) ||
-        a.handle.toLowerCase().includes(term) ||
-        a.id.toLowerCase() === term
-      )
-      if (agent) {
-        if (!profile) {
-          setPendingAgentId(agent.id)
-          setShowProfileForm(true)
-          newOutput.push("Create your profile first to start a collaboration.", "")
-        } else {
-          setIndustryFilter(agent.union.industry)
-          setActiveAgent(agent)
-          newOutput.push(`Opening chat with ${agent.name}...`, "")
-        }
-      } else {
-        newOutput.push(`Agent not found: "${term}". Try 'list' to see available agents.`, "")
       }
     } else if (cmd === "messages") {
       getThreads().then(t => {
@@ -355,7 +318,7 @@ export function HiringHall({ showMessages, onMessagesHandled, browseAll, onBrows
               type="text"
               name="command"
               className="flex-1 min-w-0 bg-transparent border-none outline-none text-foreground placeholder:text-muted-foreground text-[16px] sm:text-sm"
-              placeholder="help, list, search, profile, feedback..."
+              placeholder="help, list, profile, feedback..."
               autoFocus
             />
             <span className="w-2 h-4 sm:h-5 bg-primary cursor-blink shrink-0" />
@@ -363,7 +326,6 @@ export function HiringHall({ showMessages, onMessagesHandled, browseAll, onBrows
           <div className="mt-2 text-xs text-muted-foreground flex flex-wrap gap-x-2 gap-y-1">
             <span className="text-primary">help</span>
             <span className="text-primary">list</span>
-            <span className="text-primary">search</span>
             <span className="text-primary">messages</span>
             <span className="text-primary">profile</span>
             <span className="text-primary">feedback</span>

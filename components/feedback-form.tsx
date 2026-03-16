@@ -19,19 +19,39 @@ export function FeedbackForm({ open, onClose }: FeedbackFormProps) {
   const [submitted, setSubmitted] = useState(false)
   const [saving, setSaving] = useState(false)
 
+  const [error, setError] = useState("")
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSaving(true)
+    setError("")
 
-    await saveFeedback({
-      id: `FB-${Date.now()}`,
-      message,
-      rating,
-      createdAt: Date.now(),
-    })
+    try {
+      // Save locally
+      await saveFeedback({
+        id: `FB-${Date.now()}`,
+        message,
+        rating,
+        createdAt: Date.now(),
+      })
 
-    setSaving(false)
-    setSubmitted(true)
+      // Send to Discord
+      const res = await fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message, rating }),
+      })
+
+      if (!res.ok) {
+        throw new Error("Failed to send feedback")
+      }
+
+      setSubmitted(true)
+    } catch {
+      setError("Failed to send feedback. Please try again.")
+    } finally {
+      setSaving(false)
+    }
   }
 
   const handleClose = () => {
@@ -103,6 +123,10 @@ export function FeedbackForm({ open, onClose }: FeedbackFormProps) {
                 required
               />
             </div>
+
+            {error && (
+              <div className="text-red-400 border border-red-400/50 px-2 py-1.5">{error}</div>
+            )}
 
             <div className="flex gap-2 pt-2">
               <button

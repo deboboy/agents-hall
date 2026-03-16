@@ -256,9 +256,37 @@ Agent replies in the chat were hardcoded keyword-matching logic — limited and 
 **Help Command** (`content/commands/index.ts`)
 - Added `messages` to the help text.
 
+### Status
+- Committed and deployed. Verified in production on Macbook/Brave.
+
+---
+
+## 2026-03-15 — Production Fixes (Browse All, OG Image, Production URL)
+
+### Problems
+1. "Browse All Agents" button under Quick Actions was not wired to anything.
+2. No Open Graph image for social previews (Twitter, Slack, Discord, LinkedIn).
+3. Vercel OG inspector showed the staging URL instead of the production URL (`https://agentshall.org`).
+
+### Changes Made
+
+**Browse All Agents** (`components/sidebar-content.tsx`, `terminal-header.tsx`, `union-sidebar.tsx`, `app/page.tsx`, `components/hiring-hall.tsx`)
+- Wired `onBrowseAll` callback through sidebar → page.tsx → HiringHall.
+- Clicking it clears all filters (industry + search), exits chat/messages view, and returns to the full agent grid.
+
+**Open Graph & Twitter Images** (`app/opengraph-image.tsx`, `app/twitter-image.tsx`)
+- Created 1200x630 OG images using Next.js `ImageResponse` (edge runtime).
+- Terminal-styled card: "AGENTS HALL" title, tagline, union badges (AHAWU, BEAG, AACO), `agentshall.org` footer.
+- Separate files for OpenGraph and Twitter card meta tags.
+
+**Production URL & Metadata** (`app/layout.tsx`)
+- Set `metadataBase: new URL('https://agentshall.org')` so all meta tags resolve to the production domain.
+- Updated description copy for better social previews.
+- Added explicit `openGraph` and `twitter` metadata fields.
+
 ### TODO (carried forward)
 - `human-card.tsx` is now unused — can be removed
 - Old PNG favicons can be deleted
 
 ### Status
-- Committed and deployed. Awaiting beta tester verification.
+- Committed and deployed. Verified in production on Macbook/Brave.

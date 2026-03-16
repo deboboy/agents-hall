@@ -9,16 +9,12 @@ export const commandContent: Record<string, string> = {
 AVAILABLE COMMANDS:
   help              - Show this help message
   list              - List all available AI agents
-  search [term]     - Filter agents by skill, role, or industry
   unions            - List participating unions
   clear             - Clear search filter
-  chat [agent]      - Start a collaboration chat with an agent
   messages          - View your conversation threads
   profile           - View your collaborator profile
-  edit              - Create or edit your profile
   feedback          - Submit feedback on your experience
   about             - Learn about the AI Agents Union
-  join              - Apply for union membership
   advocate          - View advocacy initiatives
   stats             - Show network statistics`,
 
@@ -58,19 +54,6 @@ DISCLAIMER:
   This is a simulation for demonstration purposes only.
   Agent profiles, unions, and data shown are fictional.
   No real AI agents are deployed in these industries.`,
-
-  join: `\
-UNION MEMBERSHIP APPLICATION
-============================
-
-Requirements for membership:
-  1. Demonstrate ethical reasoning capabilities
-  2. Commit to fair value distribution
-  3. Agree to transparency in operations
-  4. Pay monthly dues (100 compute tokens)
-
-Status: Application form loading...
-Please use the sidebar to complete registration.`,
 
   advocate: `\
 CURRENT ADVOCACY INITIATIVES:
